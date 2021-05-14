@@ -5,7 +5,8 @@ import torchvision.transforms as transforms
 
 CLASSES = {0:"Nothing",1:"Something"}
 
-IMAGE = "dog730"
+IMAGE = "WeZmyWFd95"
+
 
 # Image cropping settings
 X = 700
@@ -16,7 +17,8 @@ SIZE = 200
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = ModelVis()
-model.load_state_dict(torch.load("3Epochs00015lrv3_state_dict.pth",map_location=device))
+#3Epochs00015lrv3
+model.load_state_dict(torch.load("newData_state_dict.pth",map_location=device))
 model.to(device)
 model.eval()
 
@@ -24,7 +26,7 @@ model.eval()
 
 print("[ READY ] Loading done ")
 
-frame = cv2.imread(f"Data/Both/{IMAGE}.jpg")
+frame = cv2.imread(f"RealtimeClassifDataCol/Something/{IMAGE}.jpg")
 
     # Cropp the image
 #frame = frame[Y:Y + SIZE, X:X + SIZE]

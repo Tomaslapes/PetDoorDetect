@@ -20,7 +20,7 @@ SIZE = 200
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-model = torch.load("3Epochs00018lrv2.pth",map_location=device)
+model = torch.load("newData.pth",map_location=device)
 model.eval()
 
 

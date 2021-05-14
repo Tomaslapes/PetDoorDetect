@@ -1,61 +1,73 @@
 import cv2
-from os import listdir
+import torch
+import torchvision.transforms as transforms
+from time import sleep
+from django.utils.crypto import get_random_string
 from os import environ
 
 '''
-Just a quick tool to make data collection easier.
+Goal of this program is to capture data in 1 minute intervals
+and try to classify the image. This will later server to identify
+scenarios that are more difficult for the network
 '''
-
-cap = cv2.VideoCapture(environ.get("CAMERA_2_ADDR"))
-
-CLASSES = {"cat":("Data/Cat/",0),"dog":("Data/Dog/",0),"nothing":("Data/Nothing/",0)}
-
 #Image cropping settings
 X = 700
 Y = 420
 SIZE = 200
 
-for my_class in CLASSES:
-    #files = listdir(CLASSES[my_class][0])
-    #files.sort()
-    #print(files)
-    #print(my_class, sorted( listdir(CLASSES[my_class][0]) )[-1].strip(my_class).strip(".jpg"))
-    #file_number = int(listdir(CLASSES[my_class][0])[-1].strip(my_class).strip(".jpg"))
-    file_number = len(listdir(CLASSES[my_class][0]))
-    CLASSES[my_class] = (CLASSES[my_class][0],file_number+250)
+# INITIALIZE THE NN
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
 
-print(CLASSES)
-print("[ READY ] press D to capture a DOG, C to capture a CAT, and X to capture NOTHING. Exit with Q ")
+model = torch.load("newData.pth",map_location=device)
+model.eval()
+
+CLASSES = {0:"Nothing",1:"Something"}
+
+print("[ READY ] Loading done ")
+
+CAMERA_ADDR = environ.get('CAMERA_2_ADDR')
 
 while True:
-    ret, frame = cap.read()
+    OK = False
 
-    # Cropp the image
-    frame = frame[Y:Y+SIZE,X:X+SIZE]
+    trans = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Grayscale(),
+        transforms.Resize((100, 100))
+    ])
 
-    cv2.imshow('Camera', frame)
+    while not OK:
+        try:
+            cap = cv2.VideoCapture(CAMERA_ADDR)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+            ret, frame = cap.read()
 
+            # Crop the image
+            frame = frame[Y:Y+SIZE,X:X+SIZE]
+            cap.release()
 
-    # TODO put this into a for loop
-    if cv2.waitKey(1) & 0xFF == ord('d'):
-        cv2.imwrite(f"{CLASSES['dog'][0]}dog{CLASSES['dog'][1]}.jpg",frame)
+            image_data = frame
+            image_data = trans(image_data)
+            image_data = torch.unsqueeze(image_data,0).float()
+            pred = model(image_data.to(device))
+            result = (pred >= 0.5).item()
 
-        CLASSES['dog'] = (CLASSES['dog'][0],CLASSES['dog'][1]+1)
-        print("DOG image saved!")
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    if cv2.waitKey(1) & 0xFF == ord('c'):
-        cv2.imwrite(f"{CLASSES['cat'][0]}cat{CLASSES['cat'][1]}.jpg",frame)
-        
-        CLASSES['cat'] = (CLASSES['cat'][0],CLASSES['cat'][1]+1)
-        print("CAT image saved!")
+            random_name = get_random_string(length=10)
 
-    if cv2.waitKey(1) & 0xFF == ord('x'):
-        cv2.imwrite(f"{CLASSES['nothing'][0]}nothing{CLASSES['nothing'][1]}.jpg",frame)
+            cv2.imwrite(f"RealtimeClassifDataCol/{CLASSES[result]}/{random_name}.jpg",frame)
 
-        CLASSES['nothing'] = (CLASSES['nothing'][0],CLASSES['nothing'][1]+1)
-        print("NOTHING image saved!")
+            cap.release()
+            OK =True
+        except Exception as e:
+            if cap is not None:
+                print(f"cap value: {cap}>>","Cap released!")
+                cap.release()
+            print(e)
+
+    sleep(60)
 
 cv2.destroyAllWindows()

@@ -74,8 +74,9 @@ class ModelVis(nn.Module):
     def forward(self, x):
 
         x = self.conv1(x)
+
         x = F.relu(x)
-        images = self.create_grid(x)
+
 
         x = self.conv2(x)
         x = F.relu(x)
@@ -83,7 +84,7 @@ class ModelVis(nn.Module):
 
         x = self.conv3(x)
         x = F.relu(x)
-
+        images = self.create_grid(x)
 
 
         x = x.reshape(-1, 60840)

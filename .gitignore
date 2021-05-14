@@ -2,3 +2,5 @@ Data/**
 TestData/**
 .idea/**
 *.pth
+
+RealtimeClassifDataCol/*
