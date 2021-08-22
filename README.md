@@ -7,7 +7,8 @@ Plan:
 - ✅ Come up with an architecture
 - ✅ Create/come up with a dataloader, data-augmentation
 - ✅ Train the network
-- 🚧 Send message when cat/dog is present
+- ✅ Send message when cat/dog is present
+- UPDATE: 🚧 Collect more diverse data. Currently the algorith does poorly on images that are not taken during winter images.
 
  <h3>Output of the First Conv layer</h3>
  
